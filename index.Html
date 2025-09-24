@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Asset Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --primary-green:#006066;
+      --white:#ffffff;
+      --dark-bg:#f5f5f5;
+      --text-dark:#1a1a1a;
+      --muted:#666;
+      --red:#e63946;
+    }
+    * {box-sizing:border-box}
+    body {background:var(--dark-bg); color:var(--text-dark); margin:0; padding:20px; font-family:Arial,sans-serif;}
+    header {display:flex; align-items:center; padding:0 20px;}
+    header img.logo {height:60px;object-fit:contain}
+    header h1 {flex:1; margin:0; font-size:2.5rem; color:var(--primary-green); text-align:center;}
+    .card {background:var(--white); padding:16px; border-radius:8px; margin-top:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); overflow-x:auto;}
+    input,button {padding:8px; border-radius:4px; border:1px solid var(--muted); margin-right:5px; font-size:1rem;}
+    button {cursor:pointer; background:var(--primary-green); color:var(--white); font-weight:bold; border:none;}
+    button.ghost {background:transparent; color:var(--primary-green); border:1px solid var(--primary-green);}
+    table {width:100%; border-collapse:collapse; margin-top:10px; min-width:800px;}
+    thead {background:var(--primary-green); color:var(--white); position:sticky; top:0; z-index:1;}
+    th,td {padding:8px; border-bottom:1px solid #ddd; text-align:left;}
+    .badge {padding:4px 10px; border-radius:12px; font-weight:bold; font-size:0.9rem; display:inline-block;}
+    .issued {background:var(--primary-green);color:#fff}
+    .notissued {background:var(--red);color:#fff}
+    .hidden {display:none!important}
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" class="logo" alt="Logo">
+  <h1>Asset Tracker</h1>
+</header>
+
+<div class="card">
+  <input type="text" id="searchSerial" placeholder="Enter Serial Number or Name">
+  <button id="searchBtn">Search</button>
+  <button id="showAllBtn" class="ghost">Show All</button>
+  <button id="showStockBtn" class="ghost">Stock</button>
+</div>
+
+<div id="resultCard" class="card hidden">
+  <h2>Employee Details</h2>
+  <p><strong>Name:</strong> <span id="resName"></span></p>
+  <p><strong>Email:</strong> <span id="resEmail"></span></p>
+  <p><strong>Phone:</strong> <span id="resPhone"></span></p>
+  <p><strong>Device:</strong> <span id="resDevice"></span></p>
+  <p><strong>Serial:</strong> <span id="resSerial"></span></p>
+  <p><strong>Custody:</strong> <span id="resCustody"></span></p>
+  <p><strong>Setup Type:</strong> <span id="resSetupType"></span></p>
+  <p><strong>Monitor SN1:</strong> <span id="resMonitor1"></span></p>
+  <p><strong>Monitor SN2:</strong> <span id="resMonitor2"></span></p>
+  <p><strong>Work Phone:</strong> <span id="resWorkPhone"></span></p>
+  <p><strong>Date:</strong> <span id="resDate"></span></p>
+  <p><strong>Issued:</strong> <span id="resIssued" class="badge"></span></p>
+</div>
+
+<div id="mainTableCard" class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th><th>Email</th><th>Phone</th><th>Device</th><th>Serial</th>
+        <th>Custody</th><th>Setup Type</th><th>Monitor SN1</th><th>Monitor SN2</th>
+        <th>Work Phone</th><th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div id="stockSection" class="card hidden">
+  <h2>Stock</h2>
+  <div id="stock"></div>
+</div>
+
+<script>
+/* ===== Password protection ===== */
+(function(){
+  const allowedPassword = "RSMC@1234";
+  const entered = prompt("Enter password to access Asset Tracker:");
+  if (entered !== allowedPassword) {
+    document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>Access Denied</h2>";
+    throw new Error("Access denied");
+  }
+})();
+
+/* ===== DOM references ===== */
+const tableBody = document.getElementById("tableBody");
+const resultCard = document.getElementById("resultCard");
+const mainTableCard = document.getElementById("mainTableCard");
+const searchSerial = document.getElementById("searchSerial");
+const resName = document.getElementById("resName");
+const resEmail = document.getElementById("resEmail");
+const resPhone = document.getElementById("resPhone");
+const resDevice = document.getElementById("resDevice");
+const resSerial = document.getElementById("resSerial");
+const resCustody = document.getElementById("resCustody");
+const resSetupType = document.getElementById("resSetupType");
+const resMonitor1 = document.getElementById("resMonitor1");
+const resMonitor2 = document.getElementById("resMonitor2");
+const resWorkPhone = document.getElementById("resWorkPhone");
+const resDate = document.getElementById("resDate");
+const resIssued = document.getElementById("resIssued");
+
+/* ===== Inventory placeholder ===== */
+let inventory = [];
+
+/* ===== Helpers ===== */
+function escapeHTML(str){
+  return String(str||"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function renderTable(list){
+  tableBody.innerHTML = "";
+  list.forEach(item => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHTML(item.Name)}</td>
+      <td>${escapeHTML(item.Email)}</td>
+      <td>${escapeHTML(item.Phone)}</td>
+      <td>${escapeHTML(item.Device)}</td>
+      <td>${escapeHTML(item.Serial)}</td>
+      <td><input type="checkbox" ${item.Custody==="TRUE"?"checked":""}></td>
+      <td>${escapeHTML(item.SetupType)}</td>
+      <td>${escapeHTML(item.Monitor1)}</td>
+      <td>${escapeHTML(item.Monitor2)}</td>
+      <td>${escapeHTML(item.WorkPhone)}</td>
+      <td>${escapeHTML(item.Date)}</td>`;
+    tr.addEventListener("click",()=>showDetails(item));
+    tableBody.appendChild(tr);
+  });
+  resultCard.classList.add("hidden");
+}
+
+function showDetails(item){
+  resultCard.classList.remove("hidden");
+  resName.textContent = item.Name;
+  resEmail.textContent = item.Email;
+  resPhone.textContent = item.Phone;
+  resDevice.textContent = item.Device;
+  resSerial.textContent = item.Serial;
+  resCustody.textContent = item.Custody;
+  resSetupType.textContent = item.SetupType;
+  resMonitor1.textContent = item.Monitor1;
+  resMonitor2.textContent = item.Monitor2;
+  resWorkPhone.textContent = item.WorkPhone;
+  resDate.textContent = item.Date;
+  resIssued.textContent = item.Issued==="TRUE"?"Issued":"Not Issued";
+  resIssued.className = "badge " + (item.Issued==="TRUE"?"issued":"notissued");
+}
+
+function doSearch(){
+  const q = searchSerial.value.trim().toLowerCase();
+  if (!q) { alert("Enter search term"); return; }
+
+  // البحث في كل الحقول
+  const found = inventory.find(item => {
+    return Object.values(item).some(value => 
+      value.toLowerCase().includes(q)
+    );
+  });
+
+  if (!found) { alert("No employee found"); return; }
+  renderTable([found]);
+  showDetails(found);
+}
+
+/* ===== Load CSV ===== */
+async function loadCSV(file){
+  try{
+    const res = await fetch(file);
+    const text = await res.text();
+    const rows = text.trim().split("\n").map(r=>r.split(","));
+    const headers = rows[0].map(h=>h.replace(/"/g,"")).filter(h=>h!=="Notes");
+    const data = [];
+    for(let i=1;i<rows.length;i++){
+      const row = rows[i].map(c=>c.replace(/"/g,""));
+      if(row[0]){
+        const obj = {};
+        headers.forEach((h, idx) => obj[h]=row[idx] || "");
+        data.push(obj);
+      }
+    }
+    return {headers, data};
+  }catch(err){
+    console.error(err);
+    alert("Could not load " + file);
+    return {headers:[], data:[]};
+  }
+}
+
+/* ===== Load Stock ===== */
+async function loadStock(){
+  const {headers, data} = await loadCSV("stock.csv");
+  let html = "<table><thead><tr>";
+  headers.forEach(h => html += `<th>${h}</th>`);
+  html += "</tr></thead><tbody>";
+  data.forEach(row => {
+    html += "<tr>";
+    headers.forEach(h => html += `<td>${row[h]}</td>`);
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  document.getElementById("stock").innerHTML = html;
+  mainTableCard.classList.add("hidden");  // Hide employee table
+  resultCard.classList.add("hidden");     // Hide details card
+  document.getElementById("stockSection").classList.remove("hidden");
+}
+
+/* ===== Event Listeners ===== */
+document.getElementById("searchBtn").addEventListener("click",doSearch);
+searchSerial.addEventListener("keydown", e=>{if(e.key==="Enter") doSearch();});
+document.getElementById("showAllBtn").addEventListener("click", ()=>{renderTable(inventory); document.getElementById("stockSection").classList.add("hidden");});
+document.getElementById("showStockBtn").addEventListener("click", loadStock);
+
+
+(async function init(){
+  const {data} = await loadCSV("employees.csv"); // employees.csv هو المصدر الرئيسي
+  inventory = data;
+  renderTable([]); 
+})();
+</script>
+</body>
+</html>
