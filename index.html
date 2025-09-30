@@ -19,7 +19,7 @@
     header img.logo {height:60px;object-fit:contain}
     header h1 {flex:1; margin:0; font-size:2.5rem; color:var(--primary-green); text-align:center;}
     .card {background:var(--white); padding:16px; border-radius:8px; margin-top:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); overflow-x:auto;}
-    input,button {padding:8px; border-radius:4px; border:1px solid var(--muted); margin-right:5px; font-size:1rem;}
+    input,button {padding:8px; border-radius:4px; border:1px solid var(--muted); margin:5px 5px 5px 0; font-size:1rem;}
     button {cursor:pointer; background:var(--primary-green); color:var(--white); font-weight:bold; border:none;}
     button.ghost {background:transparent; color:var(--primary-green); border:1px solid var(--primary-green);}
     table {width:100%; border-collapse:collapse; margin-top:10px; min-width:800px;}
@@ -43,6 +43,7 @@
   <button id="searchBtn">Search</button>
   <button id="showAllBtn" class="ghost">Show All</button>
   <button id="showStockBtn" class="ghost">Stock</button>
+  <button id="addBtn" class="ghost">Add</button>
 </div>
 
 <div id="resultCard" class="card hidden">
@@ -77,6 +78,26 @@
 <div id="stockSection" class="card hidden">
   <h2>Stock</h2>
   <div id="stock"></div>
+</div>
+
+<!-- Add Employee Form -->
+<div id="addFormCard" class="card hidden">
+  <h2>Add Employee</h2>
+  <input type="text" id="addName" placeholder="Name">
+  <input type="text" id="addEmail" placeholder="Email">
+  <input type="text" id="addPhone" placeholder="Phone">
+  <input type="text" id="addDevice" placeholder="Device">
+  <input type="text" id="addSerial" placeholder="Serial">
+  <input type="text" id="addCustody" placeholder="Custody (TRUE/FALSE)">
+  <input type="text" id="addSetupType" placeholder="Setup Type">
+  <input type="text" id="addMonitor1" placeholder="Monitor SN1">
+  <input type="text" id="addMonitor2" placeholder="Monitor SN2">
+  <input type="text" id="addWorkPhone" placeholder="Work Phone">
+  <input type="text" id="addDate" placeholder="Date">
+  <input type="text" id="addIssued" placeholder="Issued (TRUE/FALSE)">
+  <br><br>
+  <button id="saveEmployeeBtn">Save</button>
+  <button id="cancelAddBtn" class="ghost">Cancel</button>
 </div>
 
 <script>
@@ -164,7 +185,6 @@ function doSearch(){
   const q = searchSerial.value.trim().toLowerCase();
   if (!q) { alert("Enter search term"); return; }
 
-  // البحث في كل الحقول
   const found = inventory.find(item => {
     return Object.values(item).some(value => 
       value.toLowerCase().includes(q)
@@ -213,10 +233,45 @@ async function loadStock(){
   });
   html += "</tbody></table>";
   document.getElementById("stock").innerHTML = html;
-  mainTableCard.classList.add("hidden");  // Hide employee table
-  resultCard.classList.add("hidden");     // Hide details card
+  mainTableCard.classList.add("hidden");
+  resultCard.classList.add("hidden");
   document.getElementById("stockSection").classList.remove("hidden");
 }
+
+/* ===== Add new employee ===== */
+document.getElementById("addBtn").addEventListener("click", () => {
+  document.getElementById("addFormCard").classList.remove("hidden");
+  mainTableCard.classList.add("hidden");
+  resultCard.classList.add("hidden");
+  document.getElementById("stockSection").classList.add("hidden");
+});
+
+document.getElementById("cancelAddBtn").addEventListener("click", () => {
+  document.getElementById("addFormCard").classList.add("hidden");
+});
+
+document.getElementById("saveEmployeeBtn").addEventListener("click", () => {
+  const newEmployee = {
+    Name: document.getElementById("addName").value,
+    Email: document.getElementById("addEmail").value,
+    Phone: document.getElementById("addPhone").value,
+    Device: document.getElementById("addDevice").value,
+    Serial: document.getElementById("addSerial").value,
+    Custody: document.getElementById("addCustody").value,
+    SetupType: document.getElementById("addSetupType").value,
+    Monitor1: document.getElementById("addMonitor1").value,
+    Monitor2: document.getElementById("addMonitor2").value,
+    WorkPhone: document.getElementById("addWorkPhone").value,
+    Date: document.getElementById("addDate").value,
+    Issued: document.getElementById("addIssued").value
+  };
+
+  inventory.push(newEmployee);
+  renderTable(inventory);
+
+  document.getElementById("addFormCard").classList.add("hidden");
+  mainTableCard.classList.remove("hidden");
+});
 
 /* ===== Event Listeners ===== */
 document.getElementById("searchBtn").addEventListener("click",doSearch);
@@ -224,9 +279,9 @@ searchSerial.addEventListener("keydown", e=>{if(e.key==="Enter") doSearch();});
 document.getElementById("showAllBtn").addEventListener("click", ()=>{renderTable(inventory); document.getElementById("stockSection").classList.add("hidden");});
 document.getElementById("showStockBtn").addEventListener("click", loadStock);
 
-
+/* ===== Init ===== */
 (async function init(){
-  const {data} = await loadCSV("employees.csv"); // employees.csv هو المصدر الرئيسي
+  const {data} = await loadCSV("employees.csv");
   inventory = data;
   renderTable([]); 
 })();
