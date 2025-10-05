@@ -1,290 +1,489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>Asset Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    :root {
+    :root{
       --primary-green:#006066;
       --white:#ffffff;
       --dark-bg:#f5f5f5;
       --text-dark:#1a1a1a;
       --muted:#666;
-      --red:#e63946;
+      --danger:#e63946;
+      --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --radius:8px;
     }
-    * {box-sizing:border-box}
-    body {background:var(--dark-bg); color:var(--text-dark); margin:0; padding:20px; font-family:Arial,sans-serif;}
-    header {display:flex; align-items:center; padding:0 20px;}
-    header img.logo {height:60px;object-fit:contain}
-    header h1 {flex:1; margin:0; font-size:2.5rem; color:var(--primary-green); text-align:center;}
-    .card {background:var(--white); padding:16px; border-radius:8px; margin-top:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); overflow-x:auto;}
-    input,button {padding:8px; border-radius:4px; border:1px solid var(--muted); margin:5px 5px 5px 0; font-size:1rem;}
-    button {cursor:pointer; background:var(--primary-green); color:var(--white); font-weight:bold; border:none;}
-    button.ghost {background:transparent; color:var(--primary-green); border:1px solid var(--primary-green);}
-    table {width:100%; border-collapse:collapse; margin-top:10px; min-width:800px;}
-    thead {background:var(--primary-green); color:var(--white); position:sticky; top:0; z-index:1;}
-    th,td {padding:8px; border-bottom:1px solid #ddd; text-align:left;}
-    .badge {padding:4px 10px; border-radius:12px; font-weight:bold; font-size:0.9rem; display:inline-block;}
-    .issued {background:var(--primary-green);color:#fff}
-    .notissued {background:var(--red);color:#fff}
-    .hidden {display:none!important}
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, Arial, sans-serif; margin:0; padding:20px; background:var(--dark-bg); color:var(--text-dark)}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    .logo{height:56px; width:56px; background:linear-gradient(135deg,var(--primary-green),#0a9);border-radius:8px; display:inline-block}
+    h1{margin:0; color:var(--primary-green); font-size:1.8rem; flex:1; text-align:center}
+    .card{background:var(--white); padding:16px; border-radius:var(--radius); box-shadow:var(--card-shadow); margin-bottom:16px}
+    .controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    input[type="text"], input[type="file"], button, select {padding:8px 10px; border-radius:6px; border:1px solid #ddd; font-size:1rem}
+    button{cursor:pointer; background:var(--primary-green); color:var(--white); border:none; font-weight:600}
+    button.ghost{background:transparent;color:var(--primary-green); border:1px solid var(--primary-green)}
+    button.danger{background:var(--danger); color:#fff}
+    table{width:100%; border-collapse:collapse; margin-top:12px; min-width:900px}
+    thead th{position:sticky; top:0; background:var(--primary-green); color:#fff; padding:10px 8px; text-align:left}
+    th,td{padding:8px 10px; border-bottom:1px solid #eee; vertical-align:middle}
+    .badge{display:inline-block;padding:4px 9px;border-radius:999px;font-weight:600;font-size:.85rem}
+    .issued{background:var(--primary-green);color:#fff}
+    .notissued{background:var(--danger);color:#fff}
+    .hidden{display:none!important}
+    .actions button{margin-right:6px;padding:6px 8px;font-size:.9rem}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+    label{font-size:.85rem;color:var(--muted)}
+    .small{font-size:.85rem;color:var(--muted)}
+    @media (max-width:720px){
+      thead{display:none}
+      table,tbody,td,tr{display:block;width:100%}
+      tr{margin-bottom:12px; border-radius:8px; background:#fff; box-shadow:var(--card-shadow); padding:8px}
+      td{display:flex; justify-content:space-between; padding:8px}
+      td::before{content:attr(data-label); font-weight:600; color:var(--muted); margin-right:6px}
+    }
   </style>
 </head>
 <body>
+  <header>
+    <div class="logo" aria-hidden="true"></div>
+    <h1>Asset Tracker</h1>
+  </header>
 
-<header>
-  <img src="logo.png" class="logo" alt="Logo">
-  <h1>Asset Tracker</h1>
-</header>
+  <div class="card">
+    <div class="controls" role="region" aria-label="controls">
+      <input type="text" id="searchInput" placeholder="Search by name, serial, email..." aria-label="Search">
+      <button id="searchBtn">Search</button>
+      <button id="showAllBtn" class="ghost">Show All</button>
+      <button id="showStockBtn" class="ghost">Stock</button>
+      <button id="addBtn" class="ghost">Add</button>
+      <button id="exportBtn" class="ghost">Export CSV</button>
+      <label class="ghost" style="padding:0;border:none;">
+        <input type="file" id="importCsv" accept=".csv" style="display:none">
+        <button id="importBtn" class="ghost">Import CSV</button>
+      </label>
+      <span class="small" id="countBadge"></span>
+    </div>
+  </div>
 
-<div class="card">
-  <input type="text" id="searchSerial" placeholder="Enter Serial Number or Name">
-  <button id="searchBtn">Search</button>
-  <button id="showAllBtn" class="ghost">Show All</button>
-  <button id="showStockBtn" class="ghost">Stock</button>
-  <button id="addBtn" class="ghost">Add</button>
-</div>
+  <div id="resultCard" class="card hidden" aria-live="polite">
+    <h2 style="margin-top:0">Employee Details</h2>
+    <div class="form-grid">
+      <div><label>Name</label><div id="resName"></div></div>
+      <div><label>Email</label><div id="resEmail"></div></div>
+      <div><label>Phone</label><div id="resPhone"></div></div>
+      <div><label>Device</label><div id="resDevice"></div></div>
+      <div><label>Serial</label><div id="resSerial"></div></div>
+      <div><label>Custody</label><div id="resCustody"></div></div>
+      <div><label>Setup Type</label><div id="resSetupType"></div></div>
+      <div><label>Monitor SN1</label><div id="resMonitor1"></div></div>
+      <div><label>Monitor SN2</label><div id="resMonitor2"></div></div>
+      <div><label>Work Phone</label><div id="resWorkPhone"></div></div>
+      <div><label>Date</label><div id="resDate"></div></div>
+      <div><label>Issued</label><div id="resIssued" class="badge"></div></div>
+    </div>
+  </div>
 
-<div id="resultCard" class="card hidden">
-  <h2>Employee Details</h2>
-  <p><strong>Name:</strong> <span id="resName"></span></p>
-  <p><strong>Email:</strong> <span id="resEmail"></span></p>
-  <p><strong>Phone:</strong> <span id="resPhone"></span></p>
-  <p><strong>Device:</strong> <span id="resDevice"></span></p>
-  <p><strong>Serial:</strong> <span id="resSerial"></span></p>
-  <p><strong>Custody:</strong> <span id="resCustody"></span></p>
-  <p><strong>Setup Type:</strong> <span id="resSetupType"></span></p>
-  <p><strong>Monitor SN1:</strong> <span id="resMonitor1"></span></p>
-  <p><strong>Monitor SN2:</strong> <span id="resMonitor2"></span></p>
-  <p><strong>Work Phone:</strong> <span id="resWorkPhone"></span></p>
-  <p><strong>Date:</strong> <span id="resDate"></span></p>
-  <p><strong>Issued:</strong> <span id="resIssued" class="badge"></span></p>
-</div>
+  <div id="mainTableCard" class="card">
+    <div style="overflow:auto">
+      <table id="assetTable" aria-label="asset table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Email</th><th>Phone</th><th>Device</th><th>Serial</th><th>Custody</th><th>Setup Type</th><th>Monitor SN1</th><th>Monitor SN2</th><th>Work Phone</th><th>Date</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
 
-<div id="mainTableCard" class="card">
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th><th>Email</th><th>Phone</th><th>Device</th><th>Serial</th>
-        <th>Custody</th><th>Setup Type</th><th>Monitor SN1</th><th>Monitor SN2</th>
-        <th>Work Phone</th><th>Date</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-</div>
+  <div id="stockSection" class="card hidden">
+    <h2 style="margin-top:0">Stock</h2>
+    <div id="stockContainer">No stock loaded.</div>
+  </div>
 
-<div id="stockSection" class="card hidden">
-  <h2>Stock</h2>
-  <div id="stock"></div>
-</div>
+  <div id="addFormCard" class="card hidden" aria-hidden="true">
+    <h2 id="formTitle">Add Employee</h2>
+    <div class="form-grid">
+      <div><label for="fName">Name</label><input id="fName" type="text" /></div>
+      <div><label for="fEmail">Email</label><input id="fEmail" type="text" /></div>
+      <div><label for="fPhone">Phone</label><input id="fPhone" type="text" /></div>
+      <div><label for="fDevice">Device</label><input id="fDevice" type="text" /></div>
+      <div><label for="fSerial">Serial</label><input id="fSerial" type="text" /></div>
+      <div><label for="fCustody">Custody (TRUE/FALSE)</label><input id="fCustody" type="text" /></div>
+      <div><label for="fSetupType">Setup Type</label><input id="fSetupType" type="text" /></div>
+      <div><label for="fMonitor1">Monitor SN1</label><input id="fMonitor1" type="text" /></div>
+      <div><label for="fMonitor2">Monitor SN2</label><input id="fMonitor2" type="text" /></div>
+      <div><label for="fWorkPhone">Work Phone</label><input id="fWorkPhone" type="text" /></div>
+      <div><label for="fDate">Date</label><input id="fDate" type="text" placeholder="YYYY-MM-DD" /></div>
+      <div><label for="fIssued">Issued (TRUE/FALSE)</label><input id="fIssued" type="text" /></div>
+    </div>
 
-<!-- Add Employee Form -->
-<div id="addFormCard" class="card hidden">
-  <h2>Add Employee</h2>
-  <input type="text" id="addName" placeholder="Name">
-  <input type="text" id="addEmail" placeholder="Email">
-  <input type="text" id="addPhone" placeholder="Phone">
-  <input type="text" id="addDevice" placeholder="Device">
-  <input type="text" id="addSerial" placeholder="Serial">
-  <input type="text" id="addCustody" placeholder="Custody (TRUE/FALSE)">
-  <input type="text" id="addSetupType" placeholder="Setup Type">
-  <input type="text" id="addMonitor1" placeholder="Monitor SN1">
-  <input type="text" id="addMonitor2" placeholder="Monitor SN2">
-  <input type="text" id="addWorkPhone" placeholder="Work Phone">
-  <input type="text" id="addDate" placeholder="Date">
-  <input type="text" id="addIssued" placeholder="Issued (TRUE/FALSE)">
-  <br><br>
-  <button id="saveEmployeeBtn">Save</button>
-  <button id="cancelAddBtn" class="ghost">Cancel</button>
-</div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button id="saveBtn">Save</button>
+      <button id="cancelBtn" class="ghost">Cancel</button>
+    </div>
+  </div>
 
-<script>
-/* ===== Password protection ===== */
-(function(){
-  const allowedPassword = "RSMC@1234";
-  const entered = prompt("Enter password to access Asset Tracker:");
-  if (entered !== allowedPassword) {
-    document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>Access Denied</h2>";
-    throw new Error("Access denied");
+  <script>
+  (function(){
+    // Simple password gate
+    const allowedPassword = "RSMC@1234";
+    const entered = prompt("Enter password to access Asset Tracker:");
+    if (entered !== allowedPassword) {
+      document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>Access Denied</h2>";
+      throw new Error("Access denied");
+    }
+  })();
+
+  /* DOM refs */
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const showAllBtn = document.getElementById('showAllBtn');
+  const showStockBtn = document.getElementById('showStockBtn');
+  const addBtn = document.getElementById('addBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const importCsv = document.getElementById('importCsv');
+  const tableBody = document.getElementById('tableBody');
+  const resultCard = document.getElementById('resultCard');
+  const mainTableCard = document.getElementById('mainTableCard');
+  const stockSection = document.getElementById('stockSection');
+  const stockContainer = document.getElementById('stockContainer');
+  const addFormCard = document.getElementById('addFormCard');
+  const formTitle = document.getElementById('formTitle');
+
+  const resName = document.getElementById('resName');
+  const resEmail = document.getElementById('resEmail');
+  const resPhone = document.getElementById('resPhone');
+  const resDevice = document.getElementById('resDevice');
+  const resSerial = document.getElementById('resSerial');
+  const resCustody = document.getElementById('resCustody');
+  const resSetupType = document.getElementById('resSetupType');
+  const resMonitor1 = document.getElementById('resMonitor1');
+  const resMonitor2 = document.getElementById('resMonitor2');
+  const resWorkPhone = document.getElementById('resWorkPhone');
+  const resDate = document.getElementById('resDate');
+  const resIssued = document.getElementById('resIssued');
+
+  const fName = document.getElementById('fName');
+  const fEmail = document.getElementById('fEmail');
+  const fPhone = document.getElementById('fPhone');
+  const fDevice = document.getElementById('fDevice');
+  const fSerial = document.getElementById('fSerial');
+  const fCustody = document.getElementById('fCustody');
+  const fSetupType = document.getElementById('fSetupType');
+  const fMonitor1 = document.getElementById('fMonitor1');
+  const fMonitor2 = document.getElementById('fMonitor2');
+  const fWorkPhone = document.getElementById('fWorkPhone');
+  const fDate = document.getElementById('fDate');
+  const fIssued = document.getElementById('fIssued');
+
+  const saveBtn = document.getElementById('saveBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const countBadge = document.getElementById('countBadge');
+
+  /* state */
+  const STORAGE_KEY = 'assetInventory';
+  let inventory = [];
+  let editIndex = null;
+
+  /* helpers */
+  function escapeHTML(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+  function saveToLocalStorage(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory)); updateCount(); }
+  function loadFromLocalStorage(){ try { const v = localStorage.getItem(STORAGE_KEY); return v ? JSON.parse(v) : []; } catch(e){ return []; } }
+
+  function updateCount(){ countBadge.textContent = `${inventory.length} records`; }
+
+  function clearDetails(){ resultCard.classList.add('hidden'); }
+  function showDetails(item){
+    resultCard.classList.remove('hidden');
+    resName.textContent = item.Name || '';
+    resEmail.textContent = item.Email || '';
+    resPhone.textContent = item.Phone || '';
+    resDevice.textContent = item.Device || '';
+    resSerial.textContent = item.Serial || '';
+    resCustody.textContent = item.Custody || '';
+    resSetupType.textContent = item.SetupType || '';
+    resMonitor1.textContent = item.Monitor1 || '';
+    resMonitor2.textContent = item.Monitor2 || '';
+    resWorkPhone.textContent = item.WorkPhone || '';
+    resDate.textContent = item.Date || '';
+    resIssued.textContent = (item.Issued === "TRUE") ? "Issued" : "Not Issued";
+    resIssued.className = 'badge ' + ((item.Issued === "TRUE") ? 'issued' : 'notissued');
   }
-})();
 
-/* ===== DOM references ===== */
-const tableBody = document.getElementById("tableBody");
-const resultCard = document.getElementById("resultCard");
-const mainTableCard = document.getElementById("mainTableCard");
-const searchSerial = document.getElementById("searchSerial");
-const resName = document.getElementById("resName");
-const resEmail = document.getElementById("resEmail");
-const resPhone = document.getElementById("resPhone");
-const resDevice = document.getElementById("resDevice");
-const resSerial = document.getElementById("resSerial");
-const resCustody = document.getElementById("resCustody");
-const resSetupType = document.getElementById("resSetupType");
-const resMonitor1 = document.getElementById("resMonitor1");
-const resMonitor2 = document.getElementById("resMonitor2");
-const resWorkPhone = document.getElementById("resWorkPhone");
-const resDate = document.getElementById("resDate");
-const resIssued = document.getElementById("resIssued");
+  /* render table */
+  function renderTable(list){
+    tableBody.innerHTML = '';
+    if(!list || list.length === 0){
+      tableBody.innerHTML = '<tr><td colspan="12" style="padding:12px;color:var(--muted)">No records</td></tr>';
+      return;
+    }
 
-/* ===== Inventory placeholder ===== */
-let inventory = [];
+    list.forEach((item, idx) => {
+      const tr = document.createElement('tr');
 
-/* ===== Helpers ===== */
-function escapeHTML(str){
-  return String(str||"")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
-}
+      const makeTD = (label, text) => {
+        const td = document.createElement('td');
+        td.setAttribute('data-label', label);
+        td.innerHTML = escapeHTML(String(text||''));
+        return td;
+      };
 
-function renderTable(list){
-  tableBody.innerHTML = "";
-  list.forEach(item => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${escapeHTML(item.Name)}</td>
-      <td>${escapeHTML(item.Email)}</td>
-      <td>${escapeHTML(item.Phone)}</td>
-      <td>${escapeHTML(item.Device)}</td>
-      <td>${escapeHTML(item.Serial)}</td>
-      <td><input type="checkbox" ${item.Custody==="TRUE"?"checked":""}></td>
-      <td>${escapeHTML(item.SetupType)}</td>
-      <td>${escapeHTML(item.Monitor1)}</td>
-      <td>${escapeHTML(item.Monitor2)}</td>
-      <td>${escapeHTML(item.WorkPhone)}</td>
-      <td>${escapeHTML(item.Date)}</td>`;
-    tr.addEventListener("click",()=>showDetails(item));
-    tableBody.appendChild(tr);
-  });
-  resultCard.classList.add("hidden");
-}
+      tr.appendChild(makeTD('Name', item.Name));
+      tr.appendChild(makeTD('Email', item.Email));
+      tr.appendChild(makeTD('Phone', item.Phone));
+      tr.appendChild(makeTD('Device', item.Device));
+      tr.appendChild(makeTD('Serial', item.Serial));
+      const custodyTD = makeTD('Custody', '');
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.disabled = true; if(item.Custody === 'TRUE') cb.checked = true;
+      custodyTD.appendChild(cb);
+      tr.appendChild(custodyTD);
+      tr.appendChild(makeTD('Setup Type', item.SetupType));
+      tr.appendChild(makeTD('Monitor SN1', item.Monitor1));
+      tr.appendChild(makeTD('Monitor SN2', item.Monitor2));
+      tr.appendChild(makeTD('Work Phone', item.WorkPhone));
+      tr.appendChild(makeTD('Date', item.Date));
 
-function showDetails(item){
-  resultCard.classList.remove("hidden");
-  resName.textContent = item.Name;
-  resEmail.textContent = item.Email;
-  resPhone.textContent = item.Phone;
-  resDevice.textContent = item.Device;
-  resSerial.textContent = item.Serial;
-  resCustody.textContent = item.Custody;
-  resSetupType.textContent = item.SetupType;
-  resMonitor1.textContent = item.Monitor1;
-  resMonitor2.textContent = item.Monitor2;
-  resWorkPhone.textContent = item.WorkPhone;
-  resDate.textContent = item.Date;
-  resIssued.textContent = item.Issued==="TRUE"?"Issued":"Not Issued";
-  resIssued.className = "badge " + (item.Issued==="TRUE"?"issued":"notissued");
-}
+      const actionsTD = document.createElement('td');
+      actionsTD.setAttribute('data-label', 'Actions');
+      actionsTD.className = 'actions';
+      const viewBtn = document.createElement('button'); viewBtn.className='ghost'; viewBtn.textContent = 'View';
+      viewBtn.addEventListener('click', (e)=>{
+        e.stopPropagation(); showDetails(item);
+      });
 
-function doSearch(){
-  const q = searchSerial.value.trim().toLowerCase();
-  if (!q) { alert("Enter search term"); return; }
+      const editBtn = document.createElement('button'); editBtn.className='ghost'; editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openEdit(idx); });
 
-  const found = inventory.find(item => {
-    return Object.values(item).some(value => 
-      value.toLowerCase().includes(q)
-    );
-  });
+      const delBtn = document.createElement('button'); delBtn.className='danger'; delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(confirm('Are you sure you want to delete this record?')){
+          inventory.splice(idx,1);
+          saveToLocalStorage();
+          renderTable(inventory);
+          clearDetails();
+        }
+      });
 
-  if (!found) { alert("No employee found"); return; }
-  renderTable([found]);
-  showDetails(found);
-}
+      actionsTD.appendChild(viewBtn);
+      actionsTD.appendChild(editBtn);
+      actionsTD.appendChild(delBtn);
+      tr.appendChild(actionsTD);
 
-/* ===== Load CSV ===== */
-async function loadCSV(file){
-  try{
-    const res = await fetch(file);
-    const text = await res.text();
-    const rows = text.trim().split("\n").map(r=>r.split(","));
-    const headers = rows[0].map(h=>h.replace(/"/g,"")).filter(h=>h!=="Notes");
-    const data = [];
-    for(let i=1;i<rows.length;i++){
-      const row = rows[i].map(c=>c.replace(/"/g,""));
-      if(row[0]){
-        const obj = {};
-        headers.forEach((h, idx) => obj[h]=row[idx] || "");
-        data.push(obj);
+      // click row to view details
+      tr.addEventListener('click', ()=> showDetails(item));
+      tableBody.appendChild(tr);
+    });
+  }
+
+  /* search */
+  function doSearch(){
+    const q = searchInput.value.trim().toLowerCase();
+    if(!q){ alert('Enter search term'); return; }
+    const found = inventory.filter(item => Object.values(item).some(v => (String(v||'')).toLowerCase().includes(q)));
+    if(found.length === 0){ alert('No results found'); return; }
+    renderTable(found);
+    resultCard.classList.add('hidden');
+  }
+
+  /* load CSV helper (simple) */
+  async function fetchCsvData(path){
+    try{
+      const res = await fetch(path);
+      if(!res.ok) throw new Error('not found');
+      const text = await res.text();
+      return csvToObjects(text);
+    }catch(e){
+      return null;
+    }
+  }
+
+  function csvToObjects(csvText){
+    // basic CSV parse (commas, no embedded newlines support)
+    const lines = csvText.trim().split(/\r?\n/).filter(Boolean);
+    if(lines.length === 0) return [];
+    const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+    const rows = lines.slice(1).map(line => {
+      const cols = line.split(',').map(c => c.replace(/"/g,'').trim());
+      const obj = {};
+      headers.forEach((h,i) => obj[h] = cols[i] || '');
+      return obj;
+    });
+    return rows;
+  }
+
+  /* show stock */
+  async function loadStock(){
+    const data = await fetchCsvData('stock.csv');
+    if(!data){ stockContainer.innerHTML = '<div class="small">stock.csv not found on server.</div>'; return; }
+    // render simple table
+    let html = '<div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr>';
+    Object.keys(data[0]||{}).forEach(h=> html += `<th style="padding:8px;background:#f7f7f7">${escapeHTML(h)}</th>`);
+    html += '</tr></thead><tbody>';
+    data.forEach(r=>{
+      html += '<tr>';
+      Object.keys(r).forEach(k=> html += `<td style="padding:8px;border-bottom:1px solid #eee">${escapeHTML(r[k])}</td>`);
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    stockContainer.innerHTML = html;
+  }
+
+  /* add / edit */
+  function openAdd(){
+    editIndex = null;
+    formTitle.textContent = 'Add Employee';
+    addFormCard.classList.remove('hidden');
+    addFormCard.setAttribute('aria-hidden','false');
+    mainTableCard.classList.add('hidden');
+    stockSection.classList.add('hidden');
+    resultCard.classList.add('hidden');
+    clearForm();
+  }
+
+  function openEdit(index){
+    editIndex = index;
+    const emp = inventory[index];
+    formTitle.textContent = 'Edit Employee';
+    fName.value = emp.Name || '';
+    fEmail.value = emp.Email || '';
+    fPhone.value = emp.Phone || '';
+    fDevice.value = emp.Device || '';
+    fSerial.value = emp.Serial || '';
+    fCustody.value = emp.Custody || '';
+    fSetupType.value = emp.SetupType || '';
+    fMonitor1.value = emp.Monitor1 || '';
+    fMonitor2.value = emp.Monitor2 || '';
+    fWorkPhone.value = emp.WorkPhone || '';
+    fDate.value = emp.Date || '';
+    fIssued.value = emp.Issued || '';
+    addFormCard.classList.remove('hidden');
+    addFormCard.setAttribute('aria-hidden','false');
+    mainTableCard.classList.add('hidden');
+    stockSection.classList.add('hidden');
+    resultCard.classList.add('hidden');
+  }
+
+  function clearForm(){ [fName,fEmail,fPhone,fDevice,fSerial,fCustody,fSetupType,fMonitor1,fMonitor2,fWorkPhone,fDate,fIssued].forEach(i=>i.value=''); }
+
+  function saveForm(){
+    const obj = {
+      Name: fName.value.trim(),
+      Email: fEmail.value.trim(),
+      Phone: fPhone.value.trim(),
+      Device: fDevice.value.trim(),
+      Serial: fSerial.value.trim(),
+      Custody: fCustody.value.trim().toUpperCase() === 'TRUE' ? 'TRUE' : 'FALSE',
+      SetupType: fSetupType.value.trim(),
+      Monitor1: fMonitor1.value.trim(),
+      Monitor2: fMonitor2.value.trim(),
+      WorkPhone: fWorkPhone.value.trim(),
+      Date: fDate.value.trim(),
+      Issued: fIssued.value.trim().toUpperCase() === 'TRUE' ? 'TRUE' : 'FALSE'
+    };
+
+    // simple validation
+    if(!obj.Name || !obj.Serial){
+      alert('Please provide at least Name and Serial.');
+      return;
+    }
+
+    if(editIndex === null){
+      inventory.push(obj);
+    } else {
+      inventory[editIndex] = obj;
+      editIndex = null;
+    }
+
+    saveToLocalStorage();
+    renderTable(inventory);
+    addFormCard.classList.add('hidden');
+    mainTableCard.classList.remove('hidden');
+  }
+
+  /* export */
+  function exportCSV(){
+    if(!inventory.length){ alert('No data to export'); return; }
+    const headers = Object.keys(inventory[0]);
+    const lines = [headers.join(',')];
+    inventory.forEach(row => {
+      const vals = headers.map(h => {
+        const v = row[h] || '';
+        // wrap in quotes and escape quotes
+        return `"${String(v).replace(/"/g,'""')}"`;
+      });
+      lines.push(vals.join(','));
+    });
+    const csv = lines.join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'asset_inventory.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /* import */
+  function handleImportFile(file){
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const text = e.target.result;
+      const objs = csvToObjects(text);
+      if(objs.length === 0){ alert('No valid rows in CSV'); return; }
+      // simple merge: append imported records
+      inventory = inventory.concat(objs);
+      saveToLocalStorage();
+      renderTable(inventory);
+      alert('Imported ' + objs.length + ' records.');
+    };
+    reader.readAsText(file);
+  }
+
+  /* init */
+  async function init(){
+    // try load from localStorage
+    const local = loadFromLocalStorage();
+    if(local && local.length > 0){
+      inventory = local;
+    } else {
+      // try to fetch employees.csv to seed initial data (only first time)
+      const csvData = await fetchCsvData('employees.csv');
+      if(csvData && csvData.length > 0) {
+        inventory = csvData;
+        saveToLocalStorage();
+      } else {
+        inventory = [];
       }
     }
-    return {headers, data};
-  }catch(err){
-    console.error(err);
-    alert("Could not load " + file);
-    return {headers:[], data:[]};
+    renderTable(inventory);
+    updateCount();
   }
-}
 
-/* ===== Load Stock ===== */
-async function loadStock(){
-  const {headers, data} = await loadCSV("stock.csv");
-  let html = "<table><thead><tr>";
-  headers.forEach(h => html += `<th>${h}</th>`);
-  html += "</tr></thead><tbody>";
-  data.forEach(row => {
-    html += "<tr>";
-    headers.forEach(h => html += `<td>${row[h]}</td>`);
-    html += "</tr>";
+  /* events */
+  searchBtn.addEventListener('click', doSearch);
+  searchInput.addEventListener('keydown', e => { if(e.key === 'Enter') doSearch(); });
+  showAllBtn.addEventListener('click', () => { renderTable(inventory); stockSection.classList.add('hidden'); mainTableCard.classList.remove('hidden'); });
+  showStockBtn.addEventListener('click', async () => { await loadStock(); stockSection.classList.remove('hidden'); mainTableCard.classList.add('hidden'); resultCard.classList.add('hidden'); addFormCard.classList.add('hidden'); });
+  addBtn.addEventListener('click', openAdd);
+  cancelBtn.addEventListener('click', ()=>{ addFormCard.classList.add('hidden'); mainTableCard.classList.remove('hidden'); });
+  saveBtn.addEventListener('click', saveForm);
+  exportBtn.addEventListener('click', exportCSV);
+  importBtn.addEventListener('click', ()=> importCsv.click());
+  importCsv.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if(file) handleImportFile(file);
+    importCsv.value = '';
   });
-  html += "</tbody></table>";
-  document.getElementById("stock").innerHTML = html;
-  mainTableCard.classList.add("hidden");
-  resultCard.classList.add("hidden");
-  document.getElementById("stockSection").classList.remove("hidden");
-}
 
-/* ===== Add new employee ===== */
-document.getElementById("addBtn").addEventListener("click", () => {
-  document.getElementById("addFormCard").classList.remove("hidden");
-  mainTableCard.classList.add("hidden");
-  resultCard.classList.add("hidden");
-  document.getElementById("stockSection").classList.add("hidden");
-});
+  // start
+  init();
 
-document.getElementById("cancelAddBtn").addEventListener("click", () => {
-  document.getElementById("addFormCard").classList.add("hidden");
-});
-
-document.getElementById("saveEmployeeBtn").addEventListener("click", () => {
-  const newEmployee = {
-    Name: document.getElementById("addName").value,
-    Email: document.getElementById("addEmail").value,
-    Phone: document.getElementById("addPhone").value,
-    Device: document.getElementById("addDevice").value,
-    Serial: document.getElementById("addSerial").value,
-    Custody: document.getElementById("addCustody").value,
-    SetupType: document.getElementById("addSetupType").value,
-    Monitor1: document.getElementById("addMonitor1").value,
-    Monitor2: document.getElementById("addMonitor2").value,
-    WorkPhone: document.getElementById("addWorkPhone").value,
-    Date: document.getElementById("addDate").value,
-    Issued: document.getElementById("addIssued").value
-  };
-
-  inventory.push(newEmployee);
-  renderTable(inventory);
-
-  document.getElementById("addFormCard").classList.add("hidden");
-  mainTableCard.classList.remove("hidden");
-});
-
-/* ===== Event Listeners ===== */
-document.getElementById("searchBtn").addEventListener("click",doSearch);
-searchSerial.addEventListener("keydown", e=>{if(e.key==="Enter") doSearch();});
-document.getElementById("showAllBtn").addEventListener("click", ()=>{renderTable(inventory); document.getElementById("stockSection").classList.add("hidden");});
-document.getElementById("showStockBtn").addEventListener("click", loadStock);
-
-/* ===== Init ===== */
-(async function init(){
-  const {data} = await loadCSV("employees.csv");
-  inventory = data;
-  renderTable([]); 
-})();
-</script>
+  </script>
 </body>
 </html>
+
