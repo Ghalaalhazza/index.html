@@ -2,309 +2,270 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Asset Tracker</title>
+  <title>Asset Tracker | Riyadh Schools</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
-      --primary-green:#00a37a;
-      --white:#ffffff;
-      --dark-bg:#1a1a1a;
-      --card-bg:#222;
-      --text-light:#f0f0f0;
-      --muted:#999;
-      --red:#e63946;
-      --shadow:0 2px 10px rgba(0,0,0,0.4);
+      --primary-green: #006066;
+      --white: #ffffff;
+      --dark-bg: #1a1a1a;
+      --light-bg: #f5f5f5;
+      --text-dark: #1a1a1a;
+      --text-light: #f5f5f5;
+      --muted: #888;
+      --red: #e63946;
+      --card-bg: #ffffff;
+      --shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    * {box-sizing:border-box}
+
+    body.dark {
+      --card-bg: #222;
+      --text-dark: #f5f5f5;
+      --light-bg: #1a1a1a;
+      background: var(--light-bg);
+      color: var(--text-dark);
+    }
+
     body {
-      background:var(--dark-bg);
-      color:var(--text-light);
-      margin:0;
-      padding:20px;
-      font-family:"Gill Sans MT", Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text-dark);
+      margin: 0;
+      font-family: "Gill Sans MT", Arial, sans-serif;
+      transition: background 0.3s, color 0.3s;
     }
+
     header {
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:10px;
-      background:var(--card-bg);
-      border-radius:10px;
-      box-shadow:var(--shadow);
+      background: var(--primary-green);
+      color: var(--white);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
     }
-    header img.logo {height:60px;object-fit:contain;margin-right:10px}
-    header h1 {color:var(--primary-green);margin:0}
-    .card {
-      background:var(--card-bg);
-      padding:16px;
-      border-radius:8px;
-      margin-top:20px;
-      box-shadow:var(--shadow);
-      overflow-x:auto;
+
+    header img.logo {
+      height: 60px;
+      object-fit: contain;
+      margin-right: 10px;
+      background: var(--white);
+      border-radius: 10px;
+      padding: 5px;
     }
-    input,button {
-      padding:8px;
-      border-radius:4px;
-      border:1px solid var(--muted);
-      margin:5px;
-      font-size:1rem;
-      background:#111;
-      color:var(--text-light);
+
+    header h1 {
+      font-size: 2rem;
+      margin: 0;
+      color: var(--white);
+      text-align: center;
     }
+
+    .toolbar {
+      text-align: center;
+      padding: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin: 5px;
+      font-size: 1rem;
+    }
+
+    input {
+      width: 280px;
+      background: var(--white);
+      color: var(--text-dark);
+    }
+
     button {
-      cursor:pointer;
-      background:var(--primary-green);
-      color:#fff;
-      border:none;
-      font-weight:bold;
+      cursor: pointer;
+      background: var(--primary-green);
+      color: var(--white);
+      font-weight: bold;
+      border: none;
+      transition: 0.3s;
     }
-    button.ghost {
-      background:transparent;
-      color:var(--primary-green);
-      border:1px solid var(--primary-green);
+
+    button:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
     }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+
     table {
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
-      min-width:800px;
-      color:var(--text-light);
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1000px;
     }
-    thead {background:var(--primary-green);color:#fff;position:sticky;top:0;}
-    th,td {
-      padding:8px;
-      border-bottom:1px solid #333;
-      text-align:left;
+
+    thead {
+      background: var(--primary-green);
+      color: var(--white);
     }
-    .badge {
-      padding:4px 10px;
-      border-radius:12px;
-      font-weight:bold;
-      font-size:0.9rem;
-      display:inline-block;
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
     }
-    .issued {background:var(--primary-green);color:#fff}
-    .notissued {background:var(--red);color:#fff}
-    .hidden {display:none!important}
-    .action-btn {
-      background:transparent;
-      color:var(--primary-green);
-      border:1px solid var(--primary-green);
-      border-radius:5px;
-      cursor:pointer;
-      margin:2px;
+
+    tr:hover {
+      background: rgba(0,96,102,0.08);
+    }
+
+    footer {
+      background: var(--primary-green);
+      color: var(--white);
+      text-align: center;
+      padding: 10px;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.2);
+    }
+
+    .dark-toggle {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: var(--primary-green);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
     }
   </style>
 </head>
 <body>
 
 <header>
-  <img src="logo.png" class="logo" alt="Logo">
+  <img src="logo.png" class="logo" alt="Riyadh Schools Logo">
   <h1>Asset Tracker</h1>
 </header>
 
-<div class="card">
-  <input type="text" id="searchSerial" placeholder="Enter Serial Number or Name">
+<div class="toolbar">
+  <input type="text" id="searchInput" placeholder="Search by Name or Serial Number">
   <button id="searchBtn">Search</button>
-  <button id="showAllBtn" class="ghost">Show All</button>
-  <button id="addBtn" class="ghost">Add Employee</button>
-  <button id="showStockBtn" class="ghost">Stock</button>
-  <button id="showEmployeesBtn" class="ghost">Employees CSV</button>
-</div>
-
-<div id="resultCard" class="card hidden">
-  <h2>Asset Details</h2>
-  <p><strong>Name:</strong> <span id="resName"></span></p>
-  <p><strong>Email:</strong> <span id="resEmail"></span></p>
-  <p><strong>Phone:</strong> <span id="resPhone"></span></p>
-  <p><strong>Device:</strong> <span id="resDevice"></span></p>
-  <p><strong>Serial:</strong> <span id="resSerial"></span></p>
-  <p><strong>Issued:</strong> <span id="resIssued" class="badge"></span></p>
+  <button id="showAllBtn">Show All</button>
 </div>
 
 <div class="card">
   <table>
     <thead>
       <tr>
-        <th>Name</th><th>Email</th><th>Phone</th><th>Device</th><th>Serial</th>
-        <th>Issued</th><th>Actions</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Personal phone number</th>
+        <th>Model</th>
+        <th>Serial number</th>
+        <th>Custody</th>
+        <th>Setup Type</th>
+        <th>Monitor SN 1</th>
+        <th>Monitor SN 2</th>
+        <th>Phone</th>
+        <th>Work Phone Number</th>
+        <th>Date</th>
+        <th>Note</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
   </table>
 </div>
 
-<div id="stockSection" class="card hidden">
-  <h2>Stock</h2>
-  <div id="stock"></div>
-</div>
+<footer>
+  © 2025 Riyadh Schools | IT Department – Asset Management System
+</footer>
 
-<div id="employeesSection" class="card hidden">
-  <h2>Employees (from CSV)</h2>
-  <div id="employees"></div>
-</div>
+<button class="dark-toggle" id="darkToggle">🌙</button>
 
 <script>
-/* ===== Password protection ===== */
-(function(){
-  const allowedPassword = "RSMC@1234";
-  const entered = prompt("Enter password to access Asset Tracker:");
-  if (entered !== allowedPassword) {
-    document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>Access Denied</h2>";
-    throw new Error("Access denied");
+  const tableBody = document.getElementById('tableBody');
+  const searchInput = document.getElementById('searchInput');
+  let employees = [];
+
+  // Load CSV
+  async function loadEmployees() {
+    try {
+      const res = await fetch('employees.csv');
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(r => r.split(','));
+      const headers = rows[0].map(h => h.trim());
+      employees = rows.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = row[i] ? row[i].trim() : '');
+        return obj;
+      });
+      renderTable(employees);
+    } catch (err) {
+      console.error('Error loading employees.csv', err);
+      tableBody.innerHTML = `<tr><td colspan="13" style="color:red;text-align:center;">❌ Could not load employees.csv</td></tr>`;
+    }
   }
-})();
 
-/* ===== Local Storage Setup ===== */
-let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [
-  {Name:"Hadeel Omar Haj",Email:"Ha.Omar@RSMC.edu.sa",Phone:"570441263",Device:"ThinkBook 14 G7",Serial:"PW0BYDZR",Issued:"TRUE"},
-  {Name:"Tahani Aljafari",Email:"t.aljafari@RSMC.edu.sa",Phone:"573333868",Device:"ThinkBook 14 G7",Serial:"PW0BYDVD",Issued:"TRUE"},
-  {Name:"Rawabi Almansour",Email:"Ra.Almansour@RSMC.edu.sa",Phone:"",Device:"",Serial:"",Issued:"FALSE"}
-];
+  // Render table
+  function renderTable(data) {
+    tableBody.innerHTML = '';
+    data.forEach(emp => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${emp.Name || ''}</td>
+        <td>${emp.Email || ''}</td>
+        <td>${emp['Personal phone number'] || ''}</td>
+        <td>${emp.Model || ''}</td>
+        <td>${emp['Serial number'] || ''}</td>
+        <td>${emp.Custody || ''}</td>
+        <td>${emp['Setup Type'] || ''}</td>
+        <td>${emp['Monitor SN 1'] || ''}</td>
+        <td>${emp['Monitor SN 2'] || ''}</td>
+        <td>${emp.Phone || ''}</td>
+        <td>${emp['Work Phone Number'] || ''}</td>
+        <td>${emp.Date || ''}</td>
+        <td>${emp.Note || ''}</td>`;
+      tableBody.appendChild(tr);
+    });
+  }
 
-const tableBody = document.getElementById("tableBody");
-const resultCard = document.getElementById("resultCard");
-const searchSerial = document.getElementById("searchSerial");
-const resName = document.getElementById("resName");
-const resEmail = document.getElementById("resEmail");
-const resPhone = document.getElementById("resPhone");
-const resDevice = document.getElementById("resDevice");
-const resSerial = document.getElementById("resSerial");
-const resIssued = document.getElementById("resIssued");
+  // Search (case-insensitive)
+  function search() {
+    const q = searchInput.value.trim().toLowerCase();
+    if (!q) { renderTable(employees); return; }
+    const filtered = employees.filter(e =>
+      (e.Name && e.Name.toLowerCase().includes(q)) ||
+      (e['Serial number'] && e['Serial number'].toLowerCase().includes(q))
+    );
+    renderTable(filtered);
+  }
 
-/* ===== Helpers ===== */
-function saveData(){ localStorage.setItem("inventoryData", JSON.stringify(inventory)); }
+  document.getElementById('searchBtn').addEventListener('click', search);
+  document.getElementById('showAllBtn').addEventListener('click', () => renderTable(employees));
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
 
-function renderTable(list){
-  tableBody.innerHTML = "";
-  list.forEach((item, index) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${item.Name}</td>
-      <td>${item.Email}</td>
-      <td>${item.Phone}</td>
-      <td>${item.Device}</td>
-      <td>${item.Serial}</td>
-      <td>${item.Issued==="TRUE"
-        ? "<span class='badge issued'>Issued</span>"
-        : "<span class='badge notissued'>Not Issued</span>"}</td>
-      <td>
-        <button class="action-btn" onclick="editItem(${index})">Edit</button>
-        <button class="action-btn" onclick="deleteItem(${index})">Delete</button>
-      </td>`;
-    tr.addEventListener("click",()=>showDetails(item));
-    tableBody.appendChild(tr);
+  // Dark Mode Toggle
+  const darkToggle = document.getElementById('darkToggle');
+  darkToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    darkToggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
   });
-}
 
-function showDetails(item){
-  resultCard.classList.remove("hidden");
-  resName.textContent = item.Name;
-  resEmail.textContent = item.Email;
-  resPhone.textContent = item.Phone;
-  resDevice.textContent = item.Device;
-  resSerial.textContent = item.Serial;
-  resIssued.textContent = item.Issued==="TRUE"?"Issued":"Not Issued";
-  resIssued.className = "badge " + (item.Issued==="TRUE"?"issued":"notissued");
-}
-
-/* ===== Search ===== */
-function doSearch(){
-  const q = searchSerial.value.trim().toLowerCase();
-  if (!q) {alert("Enter Serial Number or Name");return;}
-  const found = inventory.find(it =>
-    (it.Serial && it.Serial.toLowerCase()===q) ||
-    (it.Name && it.Name.toLowerCase()===q)
-  );
-  if (!found) {alert("No asset found");return;}
-  renderTable([found]);
-  showDetails(found);
-}
-
-/* ===== CRUD ===== */
-function addItem(){
-  const name = prompt("Enter Name:");
-  if(!name) return;
-  const email = prompt("Enter Email:") || "";
-  const phone = prompt("Enter Phone:") || "";
-  const device = prompt("Enter Device:") || "";
-  const serial = prompt("Enter Serial Number:") || "";
-  const issued = confirm("Is it issued?") ? "TRUE" : "FALSE";
-  inventory.push({Name:name,Email:email,Phone:phone,Device:device,Serial:serial,Issued:issued});
-  saveData();
-  renderTable(inventory);
-}
-
-function editItem(index){
-  const item = inventory[index];
-  const name = prompt("Edit Name:", item.Name);
-  if(name===null) return;
-  const email = prompt("Edit Email:", item.Email);
-  const phone = prompt("Edit Phone:", item.Phone);
-  const device = prompt("Edit Device:", item.Device);
-  const serial = prompt("Edit Serial:", item.Serial);
-  const issued = confirm("Mark as Issued?") ? "TRUE" : "FALSE";
-  inventory[index] = {Name:name,Email:email,Phone:phone,Device:device,Serial:serial,Issued:issued};
-  saveData();
-  renderTable(inventory);
-}
-
-function deleteItem(index){
-  if(confirm("Are you sure you want to delete this record?")){
-    inventory.splice(index,1);
-    saveData();
-    renderTable(inventory);
-  }
-}
-
-/* ===== CSV Loaders ===== */
-async function loadStock(){
-  try{
-    const res = await fetch("stock.csv");
-    const text = await res.text();
-    const rows = text.trim().split("\n").map(r=>r.split(","));
-    let html = "<table><thead><tr>";
-    rows[0].forEach(h=>html+=`<th>${h}</th>`);
-    html+="</tr></thead><tbody>";
-    for(let i=1;i<rows.length;i++){
-      html+="<tr>"+rows[i].map(c=>`<td>${c}</td>`).join("")+"</tr>";
-    }
-    html+="</tbody></table>";
-    document.getElementById("stock").innerHTML = html;
-    document.getElementById("stockSection").classList.remove("hidden");
-  }catch(err){alert("Error loading stock.csv");}
-}
-
-async function loadEmployees(){
-  try{
-    const res = await fetch("employees.csv");
-    const text = await res.text();
-    const rows = text.trim().split("\n").map(r=>r.split(","));
-    let html = "<table><thead><tr>";
-    rows[0].forEach(h=>html+=`<th>${h}</th>`);
-    html+="</tr></thead><tbody>";
-    for(let i=1;i<rows.length;i++){
-      html+="<tr>"+rows[i].map(c=>`<td>${c}</td>`).join("")+"</tr>";
-    }
-    html+="</tbody></table>";
-    document.getElementById("employees").innerHTML = html;
-    document.getElementById("employeesSection").classList.remove("hidden");
-  }catch(err){alert("Error loading employees.csv");}
-}
-
-/* ===== Events ===== */
-document.getElementById("searchBtn").addEventListener("click",doSearch);
-document.getElementById("showAllBtn").addEventListener("click",()=>{renderTable(inventory); resultCard.classList.add("hidden");});
-document.getElementById("addBtn").addEventListener("click",addItem);
-document.getElementById("showStockBtn").addEventListener("click",loadStock);
-document.getElementById("showEmployeesBtn").addEventListener("click",loadEmployees);
-searchSerial.addEventListener("keydown",e=>{if(e.key==="Enter")doSearch();});
-
-/* ===== Init ===== */
-renderTable(inventory);
+  // Init
+  loadEmployees();
 </script>
 </body>
 </html>
+
 
 
 
