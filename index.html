@@ -113,44 +113,39 @@
     const stockBtn = document.getElementById("stockBtn");
     const addBtn = document.getElementById("addBtn");
 
-    // 🌙 Dark Mode toggle
+    // 🌙 Dark Mode
     darkModeBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark");
     });
 
-    // 📄 Load CSV helper
-    async function loadCSV(file) {
-      try {
-        const res = await fetch(file);
-        const text = await res.text();
-        const rows = text.trim().split("\n").map(r => r.split(","));
-        return rows;
-      } catch (err) {
-        tableContainer.innerHTML = `<p style="color:red">Error loading ${file}: ${err}</p>`;
-      }
-    }
+    // 👩‍💼 Employees data (from your CSV)
+    const employeesData = [
+      ["Name", "Department", "Device"],
+      ["Ghala Alhazza", "IT Support", "ThinkBook 14 G7"],
+      ["Abdullah Al-Mutairi", "Maintenance", "Dell Latitude 5450"]
+    ];
 
-    // 👩‍💼 Employees
-    employeesBtn.addEventListener("click", async () => {
-      const rows = await loadCSV("employees.csv");
-      if (!rows) return;
-      renderTable(rows);
-    });
+    // 📦 Stock data (from your CSV)
+    const stockData = [
+      ["Item", "Model", "Quantity"],
+      ["Printer", "Xerox Altalink C8245", "3"],
+      ["Monitor", "ThinkVision T24i", "7"],
+      ["Mouse", "Logitech M170", "12"]
+    ];
 
-    // 📦 Stock
-    stockBtn.addEventListener("click", async () => {
-      const rows = await loadCSV("stock.csv");
-      if (!rows) return;
-      renderTable(rows);
-    });
+    // 👇 Show Employees
+    employeesBtn.addEventListener("click", () => renderTable(employeesData));
 
-    // ➕ Add (simple prompt demo)
+    // 👇 Show Stock
+    stockBtn.addEventListener("click", () => renderTable(stockData));
+
+    // ➕ Add Item (temporary)
     addBtn.addEventListener("click", () => {
-      const name = prompt("Enter new item/employee name:");
-      if (name) alert(`${name} added locally (not saved to file).`);
+      const name = prompt("Enter new employee or item name:");
+      if (name) alert(`${name} added locally (not saved permanently).`);
     });
 
-    // 🧾 Render table
+    // 🧾 Table render
     function renderTable(data) {
       let html = "<table><thead><tr>";
       data[0].forEach(h => html += `<th>${h}</th>`);
@@ -164,4 +159,5 @@
   </script>
 </body>
 </html>
+
 
