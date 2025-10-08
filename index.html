@@ -2,162 +2,306 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Asset Tracker – Riyadh Schools</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asset Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --primary-green: #006066;
-      --white: #ffffff;
-      --dark-bg: #1a1a1a;
-      --light-bg: #f5f5f5;
-      --text-dark: #1a1a1a;
-      --text-light: #ffffff;
-      --muted: #666;
-      --danger: #e63946;
-      --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --primary-green:#006066;
+      --white:#ffffff;
+      --dark-bg:#f5f5f5;
+      --text-dark:#1a1a1a;
+      --muted:#666;
+      --danger:#e63946;
+      --card-shadow:0 2px 6px rgba(0,0,0,0.1);
     }
 
+    * { box-sizing: border-box; }
+
     body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: var(--light-bg);
+      background: var(--dark-bg);
       color: var(--text-dark);
-      transition: background 0.3s, color 0.3s;
+      margin: 0;
+      font-family: "Gill Sans MT", Arial, sans-serif;
+      padding: 20px;
     }
+
     header {
-      background: var(--primary-green);
-      color: white;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 20px;
+      background: var(--white);
       box-shadow: var(--card-shadow);
+      padding: 15px 25px;
+      border-radius: 10px;
     }
+
+    header img.logo {
+      height: 60px;
+      object-fit: contain;
+    }
+
     header h1 {
-      font-size: 1.5rem;
+      flex: 1;
+      text-align: center;
+      font-size: 2rem;
+      color: var(--primary-green);
       margin: 0;
     }
-    header button {
-      background: white;
-      color: var(--primary-green);
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    header button:hover { background: #e6f0ef; }
 
-    main { padding: 20px; }
-
-    .buttons {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
+    nav {
+      margin: 20px 0;
+      text-align: center;
     }
-    .buttons button {
+
+    nav button {
       background: var(--primary-green);
-      color: white;
+      color: var(--white);
       border: none;
-      padding: 8px 12px;
+      padding: 10px 20px;
+      margin: 5px;
       border-radius: 6px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: 0.3s;
+      font-size: 1rem;
     }
-    .buttons button:hover { background: #004d4d; }
+
+    nav button:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+
+    #search-bar {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0 20px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      background: var(--white);
+      border-radius: 10px;
       box-shadow: var(--card-shadow);
-      background: white;
+      overflow: hidden;
     }
+
     th, td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
       text-align: left;
     }
+
     th {
-      background: #006066;
+      background: var(--primary-green);
+      color: var(--white);
+    }
+
+    tr:hover {
+      background: #f9f9f9;
+    }
+
+    .actions button {
+      padding: 6px 10px;
+      margin: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background: #4CAF50;
       color: white;
     }
 
-    body.dark {
-      background: var(--dark-bg);
-      color: var(--text-light);
+    .delete-btn {
+      background: var(--danger);
+      color: white;
     }
-    body.dark table { background: #2b2b2b; color: white; }
-    body.dark th { background: #004d4d; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Asset Tracker – Riyadh Schools</h1>
-    <button id="darkModeBtn">🌙 Dark Mode</button>
+    <img src="logo.png" alt="Logo" class="logo">
+    <h1>Asset Tracker</h1>
   </header>
 
-  <main>
-    <div class="buttons">
-      <button id="employeesBtn">Employees</button>
-      <button id="stockBtn">Stock</button>
-      <button id="addBtn">Add</button>
-    </div>
+  <nav>
+    <button onclick="showPage('employees')">Employees</button>
+    <button onclick="showPage('stock')">Stock</button>
+    <button onclick="addNew()">Add</button>
+  </nav>
 
-    <div id="tableContainer">Select a section to view data.</div>
-  </main>
+  <input type="text" id="search-bar" placeholder="Search by Serial Number..." onkeyup="searchAssets()">
+
+  <div id="content"></div>
 
   <script>
-    const tableContainer = document.getElementById("tableContainer");
-    const darkModeBtn = document.getElementById("darkModeBtn");
-    const employeesBtn = document.getElementById("employeesBtn");
-    const stockBtn = document.getElementById("stockBtn");
-    const addBtn = document.getElementById("addBtn");
+    // 📂 Data placeholders
+    let employeesData = [];
+    let stockData = [];
+    let currentPage = 'employees';
 
-    // 🌙 Dark Mode
-    darkModeBtn.addEventListener("click", () => {
-      document.body.classList.toggle("dark");
-    });
+    // 🚀 Load CSV files and parse
+    async function loadData() {
+      try {
+        const [employeesResponse, stockResponse] = await Promise.all([
+          fetch('employees.csv'),
+          fetch('stock.csv')
+        ]);
 
-    // 👩‍💼 Employees data (from your CSV)
-    const employeesData = [
-      ["Name", "Department", "Device"],
-      ["Ghala Alhazza", "IT Support", "ThinkBook 14 G7"],
-      ["Abdullah Al-Mutairi", "Maintenance", "Dell Latitude 5450"]
-    ];
+        const [employeesText, stockText] = await Promise.all([
+          employeesResponse.text(),
+          stockResponse.text()
+        ]);
 
-    // 📦 Stock data (from your CSV)
-    const stockData = [
-      ["Item", "Model", "Quantity"],
-      ["Printer", "Xerox Altalink C8245", "3"],
-      ["Monitor", "ThinkVision T24i", "7"],
-      ["Mouse", "Logitech M170", "12"]
-    ];
+        employeesData = parseCSV(employeesText);
+        stockData = parseCSV(stockText);
 
-    // 👇 Show Employees
-    employeesBtn.addEventListener("click", () => renderTable(employeesData));
+        console.log('✅ Employees Loaded:', employeesData);
+        console.log('✅ Stock Loaded:', stockData);
 
-    // 👇 Show Stock
-    stockBtn.addEventListener("click", () => renderTable(stockData));
+        renderEmployees();
 
-    // ➕ Add Item (temporary)
-    addBtn.addEventListener("click", () => {
-      const name = prompt("Enter new employee or item name:");
-      if (name) alert(`${name} added locally (not saved permanently).`);
-    });
-
-    // 🧾 Table render
-    function renderTable(data) {
-      let html = "<table><thead><tr>";
-      data[0].forEach(h => html += `<th>${h}</th>`);
-      html += "</tr></thead><tbody>";
-      for (let i = 1; i < data.length; i++) {
-        html += "<tr>" + data[i].map(c => `<td>${c}</td>`).join("") + "</tr>";
+      } catch (error) {
+        console.error('❌ Error loading CSV files:', error);
       }
-      html += "</tbody></table>";
-      tableContainer.innerHTML = html;
     }
+
+    // 🧩 CSV to JSON Parser
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split('\n');
+      const headers = lines[0].split(',');
+      return lines.slice(1).map(line => {
+        const values = line.split(',');
+        const obj = {};
+        headers.forEach((header, i) => {
+          obj[header.trim()] = values[i] ? values[i].trim() : '';
+        });
+        return obj;
+      });
+    }
+
+    // 📊 Render Employees Table
+    function renderEmployees() {
+      currentPage = 'employees';
+      const table = `
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Device</th>
+              <th>Serial Number</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${employeesData.map(emp => `
+              <tr>
+                <td>${emp.Name || ''}</td>
+                <td>${emp.Department || ''}</td>
+                <td>${emp.Device || ''}</td>
+                <td>${emp.Serial || ''}</td>
+                <td class="actions">
+                  <button class="edit-btn" onclick="editItem('${emp.Serial}')">Edit</button>
+                  <button class="delete-btn" onclick="deleteItem('${emp.Serial}')">Delete</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+      document.getElementById('content').innerHTML = table;
+    }
+
+    // 📦 Render Stock Table
+    function renderStock() {
+      currentPage = 'stock';
+      const table = `
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stockData.map(item => `
+              <tr>
+                <td>${item.Item || ''}</td>
+                <td>${item.Category || ''}</td>
+                <td>${item.Quantity || ''}</td>
+                <td>${item.Location || ''}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+      document.getElementById('content').innerHTML = table;
+    }
+
+    // 🔍 Search Function
+    function searchAssets() {
+      const query = document.getElementById('search-bar').value.toLowerCase();
+      if (currentPage === 'employees') {
+        const filtered = employeesData.filter(emp =>
+          emp.Serial && emp.Serial.toLowerCase().includes(query)
+        );
+        const table = `
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Device</th>
+                <th>Serial Number</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(emp => `
+                <tr>
+                  <td>${emp.Name}</td>
+                  <td>${emp.Department}</td>
+                  <td>${emp.Device}</td>
+                  <td>${emp.Serial}</td>
+                  <td class="actions">
+                    <button class="edit-btn" onclick="editItem('${emp.Serial}')">Edit</button>
+                    <button class="delete-btn" onclick="deleteItem('${emp.Serial}')">Delete</button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+        document.getElementById('content').innerHTML = table;
+      }
+    }
+
+    // ➕ Add New Item (placeholder)
+    function addNew() {
+      alert('🛠️ Add new item feature under construction.');
+    }
+
+    // ✏️ Edit & ❌ Delete (placeholders)
+    function editItem(serial) {
+      alert('✏️ Edit item: ' + serial);
+    }
+
+    function deleteItem(serial) {
+      alert('🗑️ Delete item: ' + serial);
+    }
+
+    // 🌐 Switch between pages
+    function showPage(page) {
+      if (page === 'employees') renderEmployees();
+      else if (page === 'stock') renderStock();
+    }
+
+    // 🚀 Load all data on start
+    window.onload = loadData;
   </script>
 </body>
 </html>
+
 
 
