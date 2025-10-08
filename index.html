@@ -1,307 +1,311 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8">
   <title>Asset Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
-      --primary-green:#006066;
+      --primary-green:#00a37a;
       --white:#ffffff;
-      --dark-bg:#f5f5f5;
-      --text-dark:#1a1a1a;
-      --muted:#666;
-      --danger:#e63946;
-      --card-shadow:0 2px 6px rgba(0,0,0,0.1);
+      --dark-bg:#1a1a1a;
+      --card-bg:#222;
+      --text-light:#f0f0f0;
+      --muted:#999;
+      --red:#e63946;
+      --shadow:0 2px 10px rgba(0,0,0,0.4);
     }
-
-    * { box-sizing: border-box; }
-
+    * {box-sizing:border-box}
     body {
-      background: var(--dark-bg);
-      color: var(--text-dark);
-      margin: 0;
-      font-family: "Gill Sans MT", Arial, sans-serif;
-      padding: 20px;
+      background:var(--dark-bg);
+      color:var(--text-light);
+      margin:0;
+      padding:20px;
+      font-family:"Gill Sans MT", Arial, sans-serif;
     }
-
     header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--white);
-      box-shadow: var(--card-shadow);
-      padding: 15px 25px;
-      border-radius: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px;
+      background:var(--card-bg);
+      border-radius:10px;
+      box-shadow:var(--shadow);
     }
-
-    header img.logo {
-      height: 60px;
-      object-fit: contain;
+    header img.logo {height:60px;object-fit:contain;margin-right:10px}
+    header h1 {color:var(--primary-green);margin:0}
+    .card {
+      background:var(--card-bg);
+      padding:16px;
+      border-radius:8px;
+      margin-top:20px;
+      box-shadow:var(--shadow);
+      overflow-x:auto;
     }
-
-    header h1 {
-      flex: 1;
-      text-align: center;
-      font-size: 2rem;
-      color: var(--primary-green);
-      margin: 0;
+    input,button {
+      padding:8px;
+      border-radius:4px;
+      border:1px solid var(--muted);
+      margin:5px;
+      font-size:1rem;
+      background:#111;
+      color:var(--text-light);
     }
-
-    nav {
-      margin: 20px 0;
-      text-align: center;
+    button {
+      cursor:pointer;
+      background:var(--primary-green);
+      color:#fff;
+      border:none;
+      font-weight:bold;
     }
-
-    nav button {
-      background: var(--primary-green);
-      color: var(--white);
-      border: none;
-      padding: 10px 20px;
-      margin: 5px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.3s;
-      font-size: 1rem;
+    button.ghost {
+      background:transparent;
+      color:var(--primary-green);
+      border:1px solid var(--primary-green);
     }
-
-    nav button:hover {
-      opacity: 0.8;
-      transform: scale(1.05);
-    }
-
-    #search-bar {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0 20px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-    }
-
     table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--white);
-      border-radius: 10px;
-      box-shadow: var(--card-shadow);
-      overflow: hidden;
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+      min-width:800px;
+      color:var(--text-light);
     }
-
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
+    thead {background:var(--primary-green);color:#fff;position:sticky;top:0;}
+    th,td {
+      padding:8px;
+      border-bottom:1px solid #333;
+      text-align:left;
     }
-
-    th {
-      background: var(--primary-green);
-      color: var(--white);
+    .badge {
+      padding:4px 10px;
+      border-radius:12px;
+      font-weight:bold;
+      font-size:0.9rem;
+      display:inline-block;
     }
-
-    tr:hover {
-      background: #f9f9f9;
-    }
-
-    .actions button {
-      padding: 6px 10px;
-      margin: 2px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .edit-btn {
-      background: #4CAF50;
-      color: white;
-    }
-
-    .delete-btn {
-      background: var(--danger);
-      color: white;
+    .issued {background:var(--primary-green);color:#fff}
+    .notissued {background:var(--red);color:#fff}
+    .hidden {display:none!important}
+    .action-btn {
+      background:transparent;
+      color:var(--primary-green);
+      border:1px solid var(--primary-green);
+      border-radius:5px;
+      cursor:pointer;
+      margin:2px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <img src="logo.png" alt="Logo" class="logo">
-    <h1>Asset Tracker</h1>
-  </header>
 
-  <nav>
-    <button onclick="showPage('employees')">Employees</button>
-    <button onclick="showPage('stock')">Stock</button>
-    <button onclick="addNew()">Add</button>
-  </nav>
+<header>
+  <img src="logo.png" class="logo" alt="Logo">
+  <h1>Asset Tracker</h1>
+</header>
 
-  <input type="text" id="search-bar" placeholder="Search by Serial Number..." onkeyup="searchAssets()">
+<div class="card">
+  <input type="text" id="searchSerial" placeholder="Enter Serial Number or Name">
+  <button id="searchBtn">Search</button>
+  <button id="showAllBtn" class="ghost">Show All</button>
+  <button id="addBtn" class="ghost">Add Employee</button>
+  <button id="showStockBtn" class="ghost">Stock</button>
+  <button id="showEmployeesBtn" class="ghost">Employees CSV</button>
+</div>
 
-  <div id="content"></div>
+<div id="resultCard" class="card hidden">
+  <h2>Asset Details</h2>
+  <p><strong>Name:</strong> <span id="resName"></span></p>
+  <p><strong>Email:</strong> <span id="resEmail"></span></p>
+  <p><strong>Phone:</strong> <span id="resPhone"></span></p>
+  <p><strong>Device:</strong> <span id="resDevice"></span></p>
+  <p><strong>Serial:</strong> <span id="resSerial"></span></p>
+  <p><strong>Issued:</strong> <span id="resIssued" class="badge"></span></p>
+</div>
 
-  <script>
-    // 📂 Data placeholders
-    let employeesData = [];
-    let stockData = [];
-    let currentPage = 'employees';
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th><th>Email</th><th>Phone</th><th>Device</th><th>Serial</th>
+        <th>Issued</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
 
-    // 🚀 Load CSV files and parse
-    async function loadData() {
-      try {
-        const [employeesResponse, stockResponse] = await Promise.all([
-          fetch('employees.csv'),
-          fetch('stock.csv')
-        ]);
+<div id="stockSection" class="card hidden">
+  <h2>Stock</h2>
+  <div id="stock"></div>
+</div>
 
-        const [employeesText, stockText] = await Promise.all([
-          employeesResponse.text(),
-          stockResponse.text()
-        ]);
+<div id="employeesSection" class="card hidden">
+  <h2>Employees (from CSV)</h2>
+  <div id="employees"></div>
+</div>
 
-        employeesData = parseCSV(employeesText);
-        stockData = parseCSV(stockText);
+<script>
+/* ===== Password protection ===== */
+(function(){
+  const allowedPassword = "RSMC@1234";
+  const entered = prompt("Enter password to access Asset Tracker:");
+  if (entered !== allowedPassword) {
+    document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>Access Denied</h2>";
+    throw new Error("Access denied");
+  }
+})();
 
-        console.log('✅ Employees Loaded:', employeesData);
-        console.log('✅ Stock Loaded:', stockData);
+/* ===== Local Storage Setup ===== */
+let inventory = JSON.parse(localStorage.getItem("inventoryData")) || [
+  {Name:"Hadeel Omar Haj",Email:"Ha.Omar@RSMC.edu.sa",Phone:"570441263",Device:"ThinkBook 14 G7",Serial:"PW0BYDZR",Issued:"TRUE"},
+  {Name:"Tahani Aljafari",Email:"t.aljafari@RSMC.edu.sa",Phone:"573333868",Device:"ThinkBook 14 G7",Serial:"PW0BYDVD",Issued:"TRUE"},
+  {Name:"Rawabi Almansour",Email:"Ra.Almansour@RSMC.edu.sa",Phone:"",Device:"",Serial:"",Issued:"FALSE"}
+];
 
-        renderEmployees();
+const tableBody = document.getElementById("tableBody");
+const resultCard = document.getElementById("resultCard");
+const searchSerial = document.getElementById("searchSerial");
+const resName = document.getElementById("resName");
+const resEmail = document.getElementById("resEmail");
+const resPhone = document.getElementById("resPhone");
+const resDevice = document.getElementById("resDevice");
+const resSerial = document.getElementById("resSerial");
+const resIssued = document.getElementById("resIssued");
 
-      } catch (error) {
-        console.error('❌ Error loading CSV files:', error);
-      }
+/* ===== Helpers ===== */
+function saveData(){ localStorage.setItem("inventoryData", JSON.stringify(inventory)); }
+
+function renderTable(list){
+  tableBody.innerHTML = "";
+  list.forEach((item, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${item.Name}</td>
+      <td>${item.Email}</td>
+      <td>${item.Phone}</td>
+      <td>${item.Device}</td>
+      <td>${item.Serial}</td>
+      <td>${item.Issued==="TRUE"
+        ? "<span class='badge issued'>Issued</span>"
+        : "<span class='badge notissued'>Not Issued</span>"}</td>
+      <td>
+        <button class="action-btn" onclick="editItem(${index})">Edit</button>
+        <button class="action-btn" onclick="deleteItem(${index})">Delete</button>
+      </td>`;
+    tr.addEventListener("click",()=>showDetails(item));
+    tableBody.appendChild(tr);
+  });
+}
+
+function showDetails(item){
+  resultCard.classList.remove("hidden");
+  resName.textContent = item.Name;
+  resEmail.textContent = item.Email;
+  resPhone.textContent = item.Phone;
+  resDevice.textContent = item.Device;
+  resSerial.textContent = item.Serial;
+  resIssued.textContent = item.Issued==="TRUE"?"Issued":"Not Issued";
+  resIssued.className = "badge " + (item.Issued==="TRUE"?"issued":"notissued");
+}
+
+/* ===== Search ===== */
+function doSearch(){
+  const q = searchSerial.value.trim().toLowerCase();
+  if (!q) {alert("Enter Serial Number or Name");return;}
+  const found = inventory.find(it =>
+    (it.Serial && it.Serial.toLowerCase()===q) ||
+    (it.Name && it.Name.toLowerCase()===q)
+  );
+  if (!found) {alert("No asset found");return;}
+  renderTable([found]);
+  showDetails(found);
+}
+
+/* ===== CRUD ===== */
+function addItem(){
+  const name = prompt("Enter Name:");
+  if(!name) return;
+  const email = prompt("Enter Email:") || "";
+  const phone = prompt("Enter Phone:") || "";
+  const device = prompt("Enter Device:") || "";
+  const serial = prompt("Enter Serial Number:") || "";
+  const issued = confirm("Is it issued?") ? "TRUE" : "FALSE";
+  inventory.push({Name:name,Email:email,Phone:phone,Device:device,Serial:serial,Issued:issued});
+  saveData();
+  renderTable(inventory);
+}
+
+function editItem(index){
+  const item = inventory[index];
+  const name = prompt("Edit Name:", item.Name);
+  if(name===null) return;
+  const email = prompt("Edit Email:", item.Email);
+  const phone = prompt("Edit Phone:", item.Phone);
+  const device = prompt("Edit Device:", item.Device);
+  const serial = prompt("Edit Serial:", item.Serial);
+  const issued = confirm("Mark as Issued?") ? "TRUE" : "FALSE";
+  inventory[index] = {Name:name,Email:email,Phone:phone,Device:device,Serial:serial,Issued:issued};
+  saveData();
+  renderTable(inventory);
+}
+
+function deleteItem(index){
+  if(confirm("Are you sure you want to delete this record?")){
+    inventory.splice(index,1);
+    saveData();
+    renderTable(inventory);
+  }
+}
+
+/* ===== CSV Loaders ===== */
+async function loadStock(){
+  try{
+    const res = await fetch("stock.csv");
+    const text = await res.text();
+    const rows = text.trim().split("\n").map(r=>r.split(","));
+    let html = "<table><thead><tr>";
+    rows[0].forEach(h=>html+=`<th>${h}</th>`);
+    html+="</tr></thead><tbody>";
+    for(let i=1;i<rows.length;i++){
+      html+="<tr>"+rows[i].map(c=>`<td>${c}</td>`).join("")+"</tr>";
     }
+    html+="</tbody></table>";
+    document.getElementById("stock").innerHTML = html;
+    document.getElementById("stockSection").classList.remove("hidden");
+  }catch(err){alert("Error loading stock.csv");}
+}
 
-    // 🧩 CSV to JSON Parser
-    function parseCSV(csvText) {
-      const lines = csvText.trim().split('\n');
-      const headers = lines[0].split(',');
-      return lines.slice(1).map(line => {
-        const values = line.split(',');
-        const obj = {};
-        headers.forEach((header, i) => {
-          obj[header.trim()] = values[i] ? values[i].trim() : '';
-        });
-        return obj;
-      });
+async function loadEmployees(){
+  try{
+    const res = await fetch("employees.csv");
+    const text = await res.text();
+    const rows = text.trim().split("\n").map(r=>r.split(","));
+    let html = "<table><thead><tr>";
+    rows[0].forEach(h=>html+=`<th>${h}</th>`);
+    html+="</tr></thead><tbody>";
+    for(let i=1;i<rows.length;i++){
+      html+="<tr>"+rows[i].map(c=>`<td>${c}</td>`).join("")+"</tr>";
     }
+    html+="</tbody></table>";
+    document.getElementById("employees").innerHTML = html;
+    document.getElementById("employeesSection").classList.remove("hidden");
+  }catch(err){alert("Error loading employees.csv");}
+}
 
-    // 📊 Render Employees Table
-    function renderEmployees() {
-      currentPage = 'employees';
-      const table = `
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Department</th>
-              <th>Device</th>
-              <th>Serial Number</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${employeesData.map(emp => `
-              <tr>
-                <td>${emp.Name || ''}</td>
-                <td>${emp.Department || ''}</td>
-                <td>${emp.Device || ''}</td>
-                <td>${emp.Serial || ''}</td>
-                <td class="actions">
-                  <button class="edit-btn" onclick="editItem('${emp.Serial}')">Edit</button>
-                  <button class="delete-btn" onclick="deleteItem('${emp.Serial}')">Delete</button>
-                </td>
-              </tr>`).join('')}
-          </tbody>
-        </table>`;
-      document.getElementById('content').innerHTML = table;
-    }
+/* ===== Events ===== */
+document.getElementById("searchBtn").addEventListener("click",doSearch);
+document.getElementById("showAllBtn").addEventListener("click",()=>{renderTable(inventory); resultCard.classList.add("hidden");});
+document.getElementById("addBtn").addEventListener("click",addItem);
+document.getElementById("showStockBtn").addEventListener("click",loadStock);
+document.getElementById("showEmployeesBtn").addEventListener("click",loadEmployees);
+searchSerial.addEventListener("keydown",e=>{if(e.key==="Enter")doSearch();});
 
-    // 📦 Render Stock Table
-    function renderStock() {
-      currentPage = 'stock';
-      const table = `
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Category</th>
-              <th>Quantity</th>
-              <th>Location</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${stockData.map(item => `
-              <tr>
-                <td>${item.Item || ''}</td>
-                <td>${item.Category || ''}</td>
-                <td>${item.Quantity || ''}</td>
-                <td>${item.Location || ''}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>`;
-      document.getElementById('content').innerHTML = table;
-    }
-
-    // 🔍 Search Function
-    function searchAssets() {
-      const query = document.getElementById('search-bar').value.toLowerCase();
-      if (currentPage === 'employees') {
-        const filtered = employeesData.filter(emp =>
-          emp.Serial && emp.Serial.toLowerCase().includes(query)
-        );
-        const table = `
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Department</th>
-                <th>Device</th>
-                <th>Serial Number</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filtered.map(emp => `
-                <tr>
-                  <td>${emp.Name}</td>
-                  <td>${emp.Department}</td>
-                  <td>${emp.Device}</td>
-                  <td>${emp.Serial}</td>
-                  <td class="actions">
-                    <button class="edit-btn" onclick="editItem('${emp.Serial}')">Edit</button>
-                    <button class="delete-btn" onclick="deleteItem('${emp.Serial}')">Delete</button>
-                  </td>
-                </tr>`).join('')}
-            </tbody>
-          </table>`;
-        document.getElementById('content').innerHTML = table;
-      }
-    }
-
-    // ➕ Add New Item (placeholder)
-    function addNew() {
-      alert('🛠️ Add new item feature under construction.');
-    }
-
-    // ✏️ Edit & ❌ Delete (placeholders)
-    function editItem(serial) {
-      alert('✏️ Edit item: ' + serial);
-    }
-
-    function deleteItem(serial) {
-      alert('🗑️ Delete item: ' + serial);
-    }
-
-    // 🌐 Switch between pages
-    function showPage(page) {
-      if (page === 'employees') renderEmployees();
-      else if (page === 'stock') renderStock();
-    }
-
-    // 🚀 Load all data on start
-    window.onload = loadData;
-  </script>
+/* ===== Init ===== */
+renderTable(inventory);
+</script>
 </body>
 </html>
+
 
 
 
